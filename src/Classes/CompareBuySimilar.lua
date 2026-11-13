@@ -50,7 +50,7 @@ local function buildURL(item, slotName, controls, modEntries, defenceEntries, is
 	if not league or league == "" or league == "Loading..." then
 		league = "Standard"
 	end
-	local hostName = "https://www.pathofexile.com/"
+	local hostName = tradeHelpers.tradeSiteHostName
 
 	-- Determine listed status from dropdown
 	local listedIndex = controls.listedDrop and controls.listedDrop.selIndex or 1

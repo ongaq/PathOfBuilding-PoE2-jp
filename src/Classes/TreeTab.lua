@@ -2046,7 +2046,7 @@ function TreeTabClass:FindTimelessJewel()
 		-- if the league was not selected via dropdown, then default to the first league in the dropdown or "" if the leagues could not be read
 		self.timelessJewelLeagueSelect = self.timelessJewelLeagueSelect or (self.tradeLeaguesList and #self.tradeLeaguesList > 0 and self.tradeLeaguesList[1]) or ""
 
-		Copy("https://www.pathofexile.com/trade/search/" .. (self.timelessJewelLeagueSelect) .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(search)))
+		Copy(tradeHelpers.tradeSiteHostName .. "trade/search/" ..(self.timelessJewelLeagueSelect) .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(search)))
 
 		controls.searchTradeButton.label = "Copy Next Trade URL"
 	end)

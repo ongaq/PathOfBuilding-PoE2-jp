@@ -1395,7 +1395,7 @@ you can add them, copy the link here, and press "Price Item" to evaluate the ite
 
 				local exactQueryStr = dkjson.encode(exactQuery.query)
 
-				local encodedUrl = s_format("https://www.pathofexile.com/trade2/search/%s/%s", self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
+				local encodedUrl = s_format("%strade2/search/%s/%s", tradeHelpers.tradeSiteHostName, self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
 
 				Copy(encodedUrl)
 				OpenURL(encodedUrl)

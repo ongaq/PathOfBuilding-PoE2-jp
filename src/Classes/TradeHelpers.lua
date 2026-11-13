@@ -615,4 +615,8 @@ function M.B64GzipDecode(str)
 	if not data then return end
 	return Inflate(data)
 end
+
+-- フォーク専用: ユーザーに表示・コピー・ブラウザで開くトレードサイトURLのホスト。
+-- APIの呼び出し先は各所のwww.pathofexile.comのまま変えない。
+M.tradeSiteHostName = "https://jp.pathofexile.com/"
 return M
