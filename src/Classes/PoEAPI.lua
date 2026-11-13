@@ -34,6 +34,20 @@ function PoEAPIClass:ValidateAuth(callback)
 	if self.authToken and self.refreshToken and self.tokenExpiry then
 		ConPrintf("Validating auth token")
 		if self.tokenExpiry < os.time() then
+			-- フォーク: トレーダー画面とインポートタブなどから同時に呼ばれても、
+			-- 同じリフレッシュトークンで二重に更新しないよう、更新中の呼び出しは結果を待たせる
+			if self.pendingRefreshCallbacks then
+				table.insert(self.pendingRefreshCallbacks, callback)
+				return
+			end
+			self.pendingRefreshCallbacks = { callback }
+			local function finish(valid, updateSettings)
+				local callbacks = self.pendingRefreshCallbacks
+				self.pendingRefreshCallbacks = nil
+				for _, pendingCallback in ipairs(callbacks) do
+					pendingCallback(valid, updateSettings)
+				end
+			end
 			ConPrintf("Auth token expired")
 			-- here recreate the token with the refresh_token
 			local formText = "client_id=pob&grant_type=refresh_token&refresh_token=" .. self.refreshToken
@@ -41,15 +55,20 @@ function PoEAPIClass:ValidateAuth(callback)
 				ConPrintf("Recreating auth token")
 				if errMsg then
 					ConPrintf("Failed to recreate auth token: %s", errMsg)
-					callback(false, false)
+					finish(false, false)
 					return
 				end
 				local responseLua = dkjson.decode(response.body)
+				if type(responseLua) ~= "table" or not responseLua.access_token or not responseLua.expires_in then
+					ConPrintf("Failed to recreate auth token: invalid response")
+					finish(false, false)
+					return
+				end
 				self.authToken = responseLua.access_token
-				self.refreshToken = responseLua.refresh_token
+				self.refreshToken = responseLua.refresh_token or self.refreshToken
 				self.tokenExpiry = os.time() + responseLua.expires_in
 				self.retries = 0
-				callback(true, true)
+				finish(true, true)
 			end, { body = formText })
 		else
 			callback(true, false)

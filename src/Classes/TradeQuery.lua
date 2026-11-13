@@ -319,8 +319,12 @@ function TradeQueryClass:PriceItem()
 	end
 
 	if main.api.authToken then
-		main.api:ValidateAuth(function(valid, _updateSettings)
+		main.api:ValidateAuth(function(valid, updateSettings)
 			if valid then
+				-- フォーク: 更新したトークンを保存しないと、次回起動時も期限切れのトークンから始まる
+				if updateSettings then
+					main.api:UpdateMain()
+				end
 				return
 			else
 				main.api:ResetDetails()

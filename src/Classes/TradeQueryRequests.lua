@@ -529,10 +529,16 @@ end
 ---@param realm string
 ---@param callback fun(query:table, errMsg:string)
 function TradeQueryRequestsClass:FetchLeagues(realm, callback)
-	local header = "Authorization: Bearer ".. (main.api.authToken or "")
-	launch:DownloadPage(
+	local function request(useAuth)
+		local header = useAuth and main.api.authToken and ("Authorization: Bearer " .. main.api.authToken) or nil
+		launch:DownloadPage(
 			self.hostName .. "api/trade2/data/leagues",
 			function(response, errMsg)
+				-- フォーク: 認証付きで401/403になった場合は認証なしで取り直す（公開リーグは認証なしでも取得できる）
+				if errMsg and header and (errMsg:match("401") or errMsg:match("403")) then
+					ConPrintf("Fetching trade leagues with auth failed (%s), retrying without auth", errMsg)
+					return request(false)
+				end
 				if errMsg then
 					return callback({"Standard", "Hardcore"}, errMsg)
 				end
@@ -549,7 +555,17 @@ function TradeQueryRequestsClass:FetchLeagues(realm, callback)
 				callback(leagues, errMsg)
 			end,
 			{header = header}
-	)
+		)
+	end
+	-- フォーク: 期限切れのトークンを送らないよう、先に検証・更新してから取得する
+	-- （トレーダー画面を開いた直後はトークン更新と並行してここが呼ばれるため、更新完了を待つ）
+	if main.api.authToken then
+		main.api:ValidateAuth(function(valid)
+			request(valid)
+		end)
+	else
+		request(false)
+	end
 end
 
 --- Build search and trade URLs with proper encoding
