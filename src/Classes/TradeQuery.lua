@@ -1126,7 +1126,7 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				self:SetNotice(context.controls.pbNotice, "")
 			end
 			if main.api.authToken == nil then
-				local url = self.tradeQueryRequests:buildUrl(self.hostName .. "trade2/search", self.pbRealm, self.pbLeague)
+				local url = self.tradeQueryRequests:buildUrl(self.tradeQueryRequests.tradeSiteHostName .. "trade2/search", self.pbRealm, self.pbLeague)
 				url = url .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(query))
 				controls["uri"..context.row_idx]:SetText(url, true)
 				return
@@ -1188,7 +1188,7 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				end,
 				{
 					callbackQueryId = function(queryId)
-						local url = self.tradeQueryRequests:buildUrl(self.hostName .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
+						local url = self.tradeQueryRequests:buildUrl(self.tradeQueryRequests.tradeSiteHostName .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
 						controls["uri"..context.row_idx]:SetText(url, true)
 					end
 				}
@@ -1220,7 +1220,7 @@ you can add them, copy the link here, and press "Price Item" to evaluate the ite
 	end
 	local pbURL
 	controls["uri" .. row_idx] = new("EditControl"):EditControl({ "TOPLEFT", controls["bestButton" .. row_idx], "TOPRIGHT" }, { 8, 0, 514, row_height }, nil, nil, "^%C\t\n", nil, function(buf)
-		local subpath = buf:match(self.hostName .. "trade2/search/(.+)$") or ""
+		local subpath = self.tradeQueryRequests:MatchTradeSearchURL(buf) or ""
 		local paths = {}
 		for path in subpath:gmatch("[^/]+") do
 			table.insert(paths, path)
@@ -1242,7 +1242,7 @@ you can add them, copy the link here, and press "Price Item" to evaluate the ite
 	end
 	controls["uri"..row_idx].tooltipFunc = function(tooltip)
 		tooltip:Clear()
-		if controls["uri"..row_idx].buf:find('^'..self.hostName..'trade2/search/') ~= nil then
+		if self.tradeQueryRequests:MatchTradeSearchURL(controls["uri"..row_idx].buf) then
 			tooltip:AddLine(16, "Control + click to open in web-browser")
 		end
 	end

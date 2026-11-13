@@ -21,7 +21,16 @@ function TradeQueryRequestsClass:TradeQueryRequests(rateLimiter)
 		["fetch"] = {},
 	}
 	self.hostName = "https://www.pathofexile.com/"
+	-- フォーク専用: ユーザーに表示・ブラウザで開くトレードサイトのURLは日本語版を使う（APIはhostNameのまま）
+	self.tradeSiteHostName = "https://jp.pathofexile.com/"
 	return self
+end
+
+---トレード検索URLから"trade2/search/"以降を取り出す。www/jpなどpathofexile.comの任意のサブドメインを受け付ける。
+---@param url string
+---@return string? subpath
+function TradeQueryRequestsClass:MatchTradeSearchURL(url)
+	return url:match("^https://[%w%-]+%.pathofexile%.com/trade2/search/(.+)$")
 end
 
 ---Main routine for processing request queue
@@ -466,7 +475,7 @@ end
 
 ---@param callback fun(items:table, errMsg:string, query: string?)
 function TradeQueryRequestsClass:SearchWithURL(url, callback)
-	local subpath = url:match(self.hostName .. "trade2/search/(.+)$")
+	local subpath = self:MatchTradeSearchURL(url)
 	if not subpath then
 		return callback(nil, "Invalid URL")
 	end
