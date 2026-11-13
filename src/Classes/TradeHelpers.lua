@@ -621,10 +621,39 @@ end
 M.tradeSiteHostName = "https://jp.pathofexile.com/"
 -- 日本語版のトレードサイトは英語のアイテム名・ベースタイプ(name/type)を解決できず、
 -- URLを開くと「検索状態の読み込みに失敗しました」になる（APIも"Unknown item name"を返す）。
--- PoBは英語名しか持たないため、name/typeを含む検索だけは英語版で開く。
+-- そのためURLに埋め込むname/typeはData/TradeItemNamesJaで日本語名に置き換える。
+-- 対応表にない名前を含む検索だけは英語版で開く。
 M.tradeSiteHostNameForItemName = "https://www.pathofexile.com/"
 
----検索クエリに応じて、表示・ブラウザで開くトレードサイトのホストを返す
+local tradeItemNamesJa, tradeItemNamesEn
+---英語→日本語の対応表と、その逆引き(日本語→英語)を返す。読み込めない場合はnil
+local function getTradeItemNames()
+	if tradeItemNamesJa == nil then
+		local ok, data = pcall(LoadModule, "Data/TradeItemNamesJa")
+		tradeItemNamesJa = ok and type(data) == "table" and data or false
+		if tradeItemNamesJa then
+			-- 公式訳が同じで一意に英語へ戻せないもの(例: Atziri's Disdain/Contempt)は逆引きから除外する
+			tradeItemNamesEn = { }
+			for key, map in pairs(tradeItemNamesJa) do
+				local reverse, duplicated = { }, { }
+				for en, ja in pairs(map) do
+					if reverse[ja] then
+						duplicated[ja] = true
+					else
+						reverse[ja] = en
+					end
+				end
+				for ja in pairs(duplicated) do
+					reverse[ja] = nil
+				end
+				tradeItemNamesEn[key] = reverse
+			end
+		end
+	end
+	return tradeItemNamesJa or nil, tradeItemNamesEn
+end
+
+---検索クエリに応じて、表示・ブラウザで開くトレードサイトのホストを返す（name/typeの置き換えはしない）
 ---@param query table? 検索クエリ（{ query = ..., sort = ... }の形で包まれていてもよい）
 ---@return string hostName
 function M.getTradeSiteHostName(query)
@@ -633,5 +662,51 @@ function M.getTradeSiteHostName(query)
 		return M.tradeSiteHostNameForItemName
 	end
 	return M.tradeSiteHostName
+end
+
+---表示・ブラウザで開くトレードサイトURL用に、ホストとURLに埋め込むクエリを決める。
+---name/typeは日本語名に置き換えて日本語版で開く。対応表にない名前があれば英語名のまま英語版で開く。
+---@param query table 検索クエリ（{ query = ..., sort = ... }で包まれていない中身）
+---@return string hostName
+---@return table query 置き換えた場合は浅いコピー、それ以外は引数そのもの
+function M.localizeTradeSiteQuery(query)
+	if type(query) ~= "table" or (query.name == nil and query.type == nil) then
+		return M.tradeSiteHostName, query
+	end
+	local namesJa = getTradeItemNames()
+	local localized = { }
+	for k, v in pairs(query) do
+		localized[k] = v
+	end
+	for _, key in ipairs({ "name", "type" }) do
+		local value = query[key]
+		if value ~= nil then
+			local ja = namesJa and type(value) == "string" and namesJa[key] and namesJa[key][value]
+			if not ja then
+				return M.tradeSiteHostNameForItemName, query
+			end
+			localized[key] = ja
+		end
+	end
+	return M.tradeSiteHostName, localized
+end
+
+---貼り付けたURLのクエリに日本語のname/typeがあれば英語名に戻す（APIの呼び出し先は英語版のため）。引数を直接書き換える
+---@param query table
+function M.delocalizeTradeQuery(query)
+	if type(query) ~= "table" or (query.name == nil and query.type == nil) then
+		return
+	end
+	local _, namesEn = getTradeItemNames()
+	if not namesEn then
+		return
+	end
+	for _, key in ipairs({ "name", "type" }) do
+		local value = query[key]
+		local en = type(value) == "string" and namesEn[key] and namesEn[key][value]
+		if en then
+			query[key] = en
+		end
+	end
 end
 return M

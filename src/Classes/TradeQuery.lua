@@ -1130,8 +1130,9 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				self:SetNotice(context.controls.pbNotice, "")
 			end
 			if main.api.authToken == nil then
-				local url = self.tradeQueryRequests:buildUrl(tradeHelpers.getTradeSiteHostName(query) .. "trade2/search", self.pbRealm, self.pbLeague)
-				url = url .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(query))
+				local hostName, urlQuery = tradeHelpers.localizeTradeSiteQuery(query)
+				local url = self.tradeQueryRequests:buildUrl(hostName .. "trade2/search", self.pbRealm, self.pbLeague)
+				url = url .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(urlQuery))
 				controls["uri"..context.row_idx]:SetText(url, true)
 				return
 			end
@@ -1192,7 +1193,20 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				end,
 				{
 					callbackQueryId = function(queryId)
-						local url = self.tradeQueryRequests:buildUrl(tradeHelpers.getTradeSiteHostName(dkjson.decode(query)) .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
+						-- フォーク: 検索IDはクエリをGzip+Base64URLにしたもの。英語名を含む場合は日本語名に置き換えて作り直す
+						local hostName
+						local decodedState = tradeHelpers.B64GzipDecode(queryId)
+						local state = decodedState and dkjson.decode(decodedState)
+						if type(state) == "table" then
+							local urlQuery
+							hostName, urlQuery = tradeHelpers.localizeTradeSiteQuery(state)
+							if urlQuery ~= state then
+								queryId = tradeHelpers.B64GzipEncode(dkjson.encode(urlQuery)) or queryId
+							end
+						else
+							hostName = tradeHelpers.getTradeSiteHostName(dkjson.decode(query))
+						end
+						local url = self.tradeQueryRequests:buildUrl(hostName .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
 						controls["uri"..context.row_idx]:SetText(url, true)
 					end
 				}
@@ -1397,9 +1411,10 @@ you can add them, copy the link here, and press "Price Item" to evaluate the ite
 				exactQuery.query.filters.trade_filters.filters = exactQuery.query.filters.trade_filters.filters or { }
 				exactQuery.query.filters.trade_filters.filters.account = { input = itemResult.trader }
 
-				local exactQueryStr = dkjson.encode(exactQuery.query)
+				local hostName, urlQuery = tradeHelpers.localizeTradeSiteQuery(exactQuery.query)
+				local exactQueryStr = dkjson.encode(urlQuery)
 
-				local encodedUrl = s_format("%strade2/search/%s/%s", tradeHelpers.getTradeSiteHostName(exactQuery.query), self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
+				local encodedUrl = s_format("%strade2/search/%s/%s", hostName, self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
 
 				Copy(encodedUrl)
 				OpenURL(encodedUrl)

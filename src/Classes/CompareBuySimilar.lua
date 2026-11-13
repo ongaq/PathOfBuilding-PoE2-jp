@@ -178,8 +178,9 @@ local function buildURL(item, slotName, controls, modEntries, defenceEntries, is
 	end
 
 	-- Build URL
-	local queryJson = dkjson.encode(queryTable)
-	local url = tradeHelpers.getTradeSiteHostName(queryTable) .. "trade2/search"
+	local hostName, urlQuery = tradeHelpers.localizeTradeSiteQuery(queryTable)
+	local queryJson = dkjson.encode(urlQuery)
+	local url = hostName .. "trade2/search"
 	if realm and realm ~= "" and realm ~= "pc" then
 		url = url .. "/" .. realm
 	end

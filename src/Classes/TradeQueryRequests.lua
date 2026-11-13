@@ -498,6 +498,8 @@ function TradeQueryRequestsClass:SearchWithURL(url, callback)
 	if type(queryIdDecoded) ~= "table" or type(queryIdDecoded.stats) ~= "table" or type(queryIdDecoded.stats[1]) ~= "table" then
 		return callback(nil, "URL is malformed")
 	end
+	-- フォーク: 日本語版サイトのURLは日本語のアイテム名を含むため、英語版APIに送る前に英語名へ戻す
+	tradeHelpers.delocalizeTradeQuery(queryIdDecoded)
 	local weightGroupIndex
 	for i, group in ipairs(queryIdDecoded.stats) do
 		if type(group) ~= "table" or type(group.type) ~= "string" then
