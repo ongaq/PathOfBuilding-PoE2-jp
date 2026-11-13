@@ -17,6 +17,8 @@ local m_pi = math.pi
 LoadModule("GameVersions")
 LoadModule("Modules/Common")
 localization = LoadModule("Modules/Localization")
+-- フォーク専用: 旧SimpleGraphic.dll向けにDeflate/InflateのGzip対応を補う
+LoadModule("Modules/GzipCompat")
 LoadModule("Modules/CalcFormat")
 LoadModule("Modules/Data")
 LoadModule("Modules/ModTools")
