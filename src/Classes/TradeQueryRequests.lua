@@ -21,8 +21,6 @@ function TradeQueryRequestsClass:TradeQueryRequests(rateLimiter)
 		["fetch"] = {},
 	}
 	self.hostName = "https://www.pathofexile.com/"
-	-- フォーク専用: ユーザーに表示・ブラウザで開くトレードサイトのURLは日本語版を使う（APIはhostNameのまま）
-	self.tradeSiteHostName = tradeHelpers.tradeSiteHostName
 	return self
 end
 

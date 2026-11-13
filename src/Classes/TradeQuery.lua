@@ -1130,7 +1130,7 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				self:SetNotice(context.controls.pbNotice, "")
 			end
 			if main.api.authToken == nil then
-				local url = self.tradeQueryRequests:buildUrl(self.tradeQueryRequests.tradeSiteHostName .. "trade2/search", self.pbRealm, self.pbLeague)
+				local url = self.tradeQueryRequests:buildUrl(tradeHelpers.getTradeSiteHostName(query) .. "trade2/search", self.pbRealm, self.pbLeague)
 				url = url .. "/" .. tradeHelpers.B64GzipEncode(dkjson.encode(query))
 				controls["uri"..context.row_idx]:SetText(url, true)
 				return
@@ -1192,7 +1192,7 @@ function TradeQueryClass:PriceItemRowDisplay(row_idx, top_pane_alignment_ref, ro
 				end,
 				{
 					callbackQueryId = function(queryId)
-						local url = self.tradeQueryRequests:buildUrl(self.tradeQueryRequests.tradeSiteHostName .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
+						local url = self.tradeQueryRequests:buildUrl(tradeHelpers.getTradeSiteHostName(dkjson.decode(query)) .. "trade2/search", self.pbRealm, self.pbLeague, queryId)
 						controls["uri"..context.row_idx]:SetText(url, true)
 					end
 				}
@@ -1399,7 +1399,7 @@ you can add them, copy the link here, and press "Price Item" to evaluate the ite
 
 				local exactQueryStr = dkjson.encode(exactQuery.query)
 
-				local encodedUrl = s_format("%strade2/search/%s/%s", tradeHelpers.tradeSiteHostName, self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
+				local encodedUrl = s_format("%strade2/search/%s/%s", tradeHelpers.getTradeSiteHostName(exactQuery.query), self.pbLeague, tradeHelpers.B64GzipEncode(exactQueryStr))
 
 				Copy(encodedUrl)
 				OpenURL(encodedUrl)

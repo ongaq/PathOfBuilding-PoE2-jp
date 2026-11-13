@@ -619,4 +619,19 @@ end
 -- フォーク専用: ユーザーに表示・コピー・ブラウザで開くトレードサイトURLのホスト。
 -- APIの呼び出し先は各所のwww.pathofexile.comのまま変えない。
 M.tradeSiteHostName = "https://jp.pathofexile.com/"
+-- 日本語版のトレードサイトは英語のアイテム名・ベースタイプ(name/type)を解決できず、
+-- URLを開くと「検索状態の読み込みに失敗しました」になる（APIも"Unknown item name"を返す）。
+-- PoBは英語名しか持たないため、name/typeを含む検索だけは英語版で開く。
+M.tradeSiteHostNameForItemName = "https://www.pathofexile.com/"
+
+---検索クエリに応じて、表示・ブラウザで開くトレードサイトのホストを返す
+---@param query table? 検索クエリ（{ query = ..., sort = ... }の形で包まれていてもよい）
+---@return string hostName
+function M.getTradeSiteHostName(query)
+	local innerQuery = type(query) == "table" and (type(query.query) == "table" and query.query or query) or nil
+	if innerQuery and (innerQuery.name ~= nil or innerQuery.type ~= nil) then
+		return M.tradeSiteHostNameForItemName
+	end
+	return M.tradeSiteHostName
+end
 return M

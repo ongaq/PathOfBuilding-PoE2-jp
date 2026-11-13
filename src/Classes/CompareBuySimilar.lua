@@ -50,8 +50,6 @@ local function buildURL(item, slotName, controls, modEntries, defenceEntries, is
 	if not league or league == "" or league == "Loading..." then
 		league = "Standard"
 	end
-	local hostName = tradeHelpers.tradeSiteHostName
-
 	-- Determine listed status from dropdown
 	local listedIndex = controls.listedDrop and controls.listedDrop.selIndex or 1
 	local listedApiValue = LISTED_STATUS_OPTIONS[listedIndex] and LISTED_STATUS_OPTIONS[listedIndex].apiValue or "available"
@@ -181,7 +179,7 @@ local function buildURL(item, slotName, controls, modEntries, defenceEntries, is
 
 	-- Build URL
 	local queryJson = dkjson.encode(queryTable)
-	local url = hostName .. "trade2/search"
+	local url = tradeHelpers.getTradeSiteHostName(queryTable) .. "trade2/search"
 	if realm and realm ~= "" and realm ~= "pc" then
 		url = url .. "/" .. realm
 	end
